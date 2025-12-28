@@ -21,7 +21,6 @@ sudo xbps-install -Syyuv \
     wpa-cute \
     wpa_gui \
     NetworkManager \
-    nmtui \
     xorg \
     gnome-keyring \
     polkit-gnome \
