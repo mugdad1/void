@@ -6,7 +6,6 @@ echo "repository=https://raw.githubusercontent.com/Encoded14/void-extra/reposito
 # Update package database and install required packages
 sudo xbps-install -Syyuv \
     hyprland \
-    hyprland-protocols \
     xorg-server-xwayland \
     xdg-desktop-portal-hyprland \
     xdg-desktop-portal \
