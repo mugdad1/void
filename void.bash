@@ -6,13 +6,11 @@ set -e
 # Function to print messages to the console
 print_message() {
     echo -e "\n===================="
-    echo -e "$1"  # Print the provided message
+    echo -e "$1"
     echo -e "===================="
 }
 
 # Step 1: Clone the required repositories with depth 1
-# This section ensures that the necessary Git repositories are present on the system.
-
 print_message "Cloning void-extra and void-packages repositories..."
 
 if [ ! -d "void-extra" ]; then
@@ -38,7 +36,8 @@ cd void-packages  # Change to the void-packages directory
 # Remove specific lines from the shared libraries file
 if [ -f "common/shlibs_remove" ]; then
     while read -r line; do
-        [[ ! -z "$line" ]] && sed -i "/$line/d" common/shlibs  # Remove the line if not empty
+        # Check and remove only non-empty lines
+        [[ ! -z "$line" ]] && sed -i "/$line/d" common/shlibs
     done < common/shlibs_remove
 else
     print_message "No shlibs_remove file found. Skipping removal."
@@ -53,15 +52,24 @@ fi
 
 # Step 4: Bootstrap the build system
 print_message "Bootstrapping the build system..."
-./xbps-src binary-bootstrap  # Run the bootstrap command
+if ! ./xbps-src binary-bootstrap; then
+    echo "Error during bootstrap. Please check your environment and the output above."
+    exit 1
+fi
 
 # Step 5: Build the desired packages
 print_message "Building packages..."
 packages="hyprland hyprland-guiutils"  # List of packages to build
-./xbps-src pkg $packages  # Build the packages
+if ! ./xbps-src pkg $packages; then
+    echo "Error during package build. Please check the output above."
+    exit 1
+fi
 
 # Step 6: Install the built packages
 print_message "Installing built packages..."
-sudo xbps-install --repository /hostdir/binpkgs/ $packages  # Install the packages from the specified repository
+if ! sudo xbps-install --repository /hostdir/binpkgs/ $packages; then
+    echo "Error during installation of packages. Please check the output above."
+    exit 1
+fi
 
 print_message "Installation of Hyprland and GUI utilities completed successfully."
