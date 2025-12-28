@@ -1,50 +1,30 @@
 #!/bin/bash
 
-# Create a directory for repositories
-mkdir -p ~/repos
-cd ~/repos
+# Clone the required repositories
+echo "Cloning repositories..."
+git clone https://github.com/Encoded14/void-extra.git
+git clone https://github.com/void-linux/void-packages.git
 
-# Clone the Void Packages repository
-git clone https://github.com/void-linux/void-packages
+# Copy the template files into void-packages
+echo "Copying template files..."
+cp -r void-extra/srcpkgs/* void-packages/srcpkgs/
+
+# Edit shlibs by removing lines in shlibs_remove and appending lines from shlibs_append
+echo "Editing shared libraries..."
 cd void-packages
+nvim common/shlibs  # Use your preferred text editor, or you can automate this if preferred
+
+# Bootstrap the build system
+echo "Bootstrapping the build system..."
 ./xbps-src binary-bootstrap
-cd ..
 
-# Clone the Hyprland GUI Utilities repository
-git clone https://github.com/hyprwm/hyprland-guiutils.git
-cd hyprland-guiutils
+# Build the packages you want
+echo "Building packages..."
+packages="hyprland hyprland-guiutils"  # Add any other packages you want to build
+./xbps-src pkg $packages
 
-# Create the template file for 'hyprland-guiutils'
-cat << 'EOF' > srcpkgs/hyprland-guiutils/template
-# Template file for 'hyprland-guiutils'
-pkgname=hyprland-guiutils
-version=0.3.0  # Update to the latest version
-revision=1     # Increment revision if needed
-build_style=cmake
-configure_args="--no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Release \
- -DCMAKE_INSTALL_PREFIX:PATH=/usr"
-hostmakedepends="cmake ninja pkgconf"
-makedepends="aquamarine cairo-devel hyprgraphics hyprlang \
- hyprtoolkit hyprutils libdrm-devel pixman-devel libxkbcommon-devel"
-depends="hyprland-qt-support"
-short_desc="Hyprland GUI utilities (successor to hyprland-qtutils)"
-maintainer="Encoded14 <linusken@tuta.io>"
-license="BSD-3-Clause"
-homepage="https://github.com/hyprwm/hyprland-guiutils"
-distfiles="https://github.com/hyprwm/hyprland-guiutils/archive/refs/tags/v${version}.tar.gz"
-checksum=9b24c0662dd0fca18ad171300a09517ee05ab8a2099749792975259db5d2bc21  # Update checksum
+# Install the built packages
+echo "Installing built packages..."
+sudo xbps-install --repository /hostdir/binpkgs/ $packages
 
-post_install() {
-    vlicense LICENSE
-}
-EOF
-
-# Copy srcpkgs to the void-packages srcpkgs directory
-cp -r --remove-destination srcpkgs/* ../void-packages/srcpkgs
-
-# Build and install packages
-cd ../void-packages
-./xbps-src pkg hyprland-guiutils
-sudo xbps-install -R hostdir/binpkgs hyprland-guiutils
-
-echo "Installation of hyprland-guiutils completed."
+echo "Installation of $packages completed successfully."
