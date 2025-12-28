@@ -18,8 +18,6 @@ sudo xbps-install -Syyuv \
     void-repo-nonfree \
     wpa_supplicant \
     wifish \
-    wpa-cute \
-    wpa_gui \
     NetworkManager \
     xorg \
     gnome-keyring \
