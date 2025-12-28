@@ -1,38 +1,50 @@
 #!/bin/bash
 
-# Create and configure the repository file
-echo "repository=https://raw.githubusercontent.com/Encoded14/void-extra/repository-x86_64" | sudo tee /etc/xbps.d/20-repository-extra.conf
-echo repository=https://raw.githubusercontent.com/Makrennel/hyprland-void/repository-x86_64-glibc | sudo tee /etc/xbps.d/hyprland-void.conf
+# Create a directory for repositories
+mkdir -p ~/repos
+cd ~/repos
 
-# Update package database and install required packages
-sudo xbps-install -Syyuv \
-    hyprland \
-    xorg-server-xwayland \
-    xdg-desktop-portal-hyprland \
-    xdg-desktop-portal \
-    xdg-utils \
-    wayland \
-    wayland-protocols \
-    xdg-desktop-portal-wlr \
-    xdg-desktop-portal-gtk \
-    void-repo-multilib \
-    void-repo-nonfree \
-    wpa_supplicant \
-    wifish \
-    NetworkManager \
-    xorg \
-    gnome-keyring \
-    polkit-gnome \
-    mtpfs \
-    inotify-tools \
-    ffmpeg \
-    libnotify \
-    git \
-    base-devel \
-    pipewire \
-    wireplumber \
-    sof-firmware \
-    intel-media-driver
+# Clone the Void Packages repository
+git clone https://github.com/void-linux/void-packages
+cd void-packages
+./xbps-src binary-bootstrap
+cd ..
 
-# Notify user of completion
-echo "Installation completed successfully."
+# Clone the Hyprland GUI Utilities repository
+git clone https://github.com/hyprwm/hyprland-guiutils.git
+cd hyprland-guiutils
+
+# Create the template file for 'hyprland-guiutils'
+cat << 'EOF' > srcpkgs/hyprland-guiutils/template
+# Template file for 'hyprland-guiutils'
+pkgname=hyprland-guiutils
+version=0.3.0  # Update to the latest version
+revision=1     # Increment revision if needed
+build_style=cmake
+configure_args="--no-warn-unused-cli -DCMAKE_BUILD_TYPE:STRING=Release \
+ -DCMAKE_INSTALL_PREFIX:PATH=/usr"
+hostmakedepends="cmake ninja pkgconf"
+makedepends="aquamarine cairo-devel hyprgraphics hyprlang \
+ hyprtoolkit hyprutils libdrm-devel pixman-devel libxkbcommon-devel"
+depends="hyprland-qt-support"
+short_desc="Hyprland GUI utilities (successor to hyprland-qtutils)"
+maintainer="Encoded14 <linusken@tuta.io>"
+license="BSD-3-Clause"
+homepage="https://github.com/hyprwm/hyprland-guiutils"
+distfiles="https://github.com/hyprwm/hyprland-guiutils/archive/refs/tags/v${version}.tar.gz"
+checksum=9b24c0662dd0fca18ad171300a09517ee05ab8a2099749792975259db5d2bc21  # Update checksum
+
+post_install() {
+    vlicense LICENSE
+}
+EOF
+
+# Copy srcpkgs to the void-packages srcpkgs directory
+cp -r --remove-destination srcpkgs/* ../void-packages/srcpkgs
+
+# Build and install packages
+cd ../void-packages
+./xbps-src pkg hyprland-guiutils
+sudo xbps-install -R hostdir/binpkgs hyprland-guiutils
+
+echo "Installation of hyprland-guiutils completed."
