@@ -1,20 +1,22 @@
 #!/bin/bash
 
-# Update and install the necessary firmware and drivers
-sudo xbps-install -S linux-firmware-intel mesa-dri intel-video-accel
+# Append configurations to .bash_profile
 
-# Install additional software packages
-sudo xbps-install -S swayfx imv light jq wl-clipboard \
-inotify-tools mpd mpc foot curl chafa cargo \
-stow playerctl mpv-mpris mpDris2 eww ruby swaybg grim \
-wmenu iwd Thunar seatd turnstile dunst ImageMagick \
-swayidle swaylock wlr-randr
+cat <<EOL >> "$HOME/.bash_profile"
 
-# Add the current user to the _seatd group
-usermod -aG _seatd "$(whoami)"
+# Load eww_scale
+[ -f "\$HOME/.eww_scale" ] && source "\$HOME/.eww_scale"
 
-# Create symbolic links for seatd and turnstile services
-ln -s /etc/sv/seatd /var/service
-ln -s /etc/sv/turnstiled /var/service
+# Ruby Path
+export GEM_HOME="\$(gem env user_gemhome)"
+export PATH="\$PATH:\$GEM_HOME/bin"
 
-echo "Setup complete! Please restart your session to apply changes."
+# Mpd music dir, you also have to configure mpd...
+export MPD_MUSIC_DIR="\$HOME/where-musics-are"
+
+# Where Dotfiles are, if not ~/.dotfiles
+export DOTFILES_DIR="\$HOME/.dotfiles"
+
+EOL
+
+echo "Configurations added to .bash_profile. Please restart your terminal or run 'source ~/.bash_profile' to apply the changes."
